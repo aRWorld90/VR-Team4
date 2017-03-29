@@ -1,4 +1,4 @@
-# Visual Recognition for Autonomous Driving
+# Visual Recognition for Autonomous Driving (Dev Test)
 The motivation of this project is to learn and develop a fully capable algorithm that will not only detect the different objects/vehicles in a road, but it will be able to recognise them and segment the image. One application for this project would be its implementation in an antonomous self-driving car. The project will be composed in 5 deliveries (one for each week).
 
 ## Authors
