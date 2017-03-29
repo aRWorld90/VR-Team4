@@ -1,0 +1,7 @@
+diff a/.gitignore b/.gitignore	(rejected hunks)
+@@ -6,3 +6,4 @@
+ 
+ # weights
+\ No newline at end of file
++*Experiments*
+ .hdf5
