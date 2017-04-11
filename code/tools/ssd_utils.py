@@ -1,6 +1,4 @@
 """Some utils for SSD."""
-
-import keras.backend as K
 import numpy as np
 import tensorflow as tf
 
@@ -30,9 +28,7 @@ class BBoxUtility(object):
         self._top_k = top_k
         self.boxes = tf.placeholder(dtype='float32', shape=(None, 4))
         self.scores = tf.placeholder(dtype='float32', shape=(None,))
-        self.nms = tf.image.non_max_suppression(self.boxes, self.scores,
-                                                self._top_k,
-                                                iou_threshold=self._nms_thresh)
+        self.nms = tf.image.non_max_suppression(self.boxes, self.scores, self._top_k, iou_threshold=self._nms_thresh)
 
         # self.sess = K.get_session()
         # self.sess = tf.Session(config=tf.ConfigProto(device_count={'GPU': 0}))
@@ -304,28 +300,47 @@ class BBoxUtility(object):
 
         return np.array(batch_y)
 
-    def ssd_build_gt_batch_v2(self, batch_gt):
+    def ssd_build_gt_batch_v2(self, batch_y):
 
         # First convert batch_gt to the format required by assign_boxes
         # boxes: Box, numpy tensor of shape (num_boxes, 4 + num_classes), num_classes without background
 
         targets = []
 
-        for i, gt in enumerate(batch_gt):
-            n_boxes = gt.shape[0]
-            boxes = np.zeros((n_boxes, 4 + self.num_classes - 1))  # -1 to not count background
-            for j, box in enumerate(gt):
-                coords = box[1:]  # [xcenter, ycenter, width, height]
-                # the code expects [xmin, ymin, xmax, ymax]
-                coords[0] = box[1] - box[3] / 2
-                coords[1] = box[2] - box[4] / 2
-                coords[2] = box[1] + box[3] / 2
-                coords[3] = box[2] + box[4] / 2
-                boxes[j, 0:4] = coords
-                one_hot = np.zeros(self.num_classes - 1)  # -1 to not count background
-                one_hot[int(box[0])] = 1.
-                boxes[j, 4:] = one_hot
-            y = self.assign_boxes(boxes)
-            targets.append(y)
+        for boxes in batch_y:
+            boxes = np.zeros((boxes.shape[0], 4 + self.num_classes))
+            for b, box in enumerate(boxes):
+                boxes[b, 0] = box[1] - box[3] / 2
+                boxes[b, 1] = box[2] - box[4] / 2
+                boxes[b, 2] = box[1] + box[3] / 2
+                boxes[b, 3] = box[2] + box[4] / 2
+                c = 4 + int(box[0])
+                boxes[b, c] = 1.
 
-        return np.array(targets)
+            boxes = self.assign_boxes(boxes)
+            targets.append(boxes)
+
+        batch_y = np.array(targets)
+
+        return batch_y
+
+        # targets = []
+        #
+        # for i, gt in enumerate(batch_gt):
+        #     n_boxes = gt.shape[0]
+        #     boxes = np.zeros((n_boxes, 4 + self.num_classes - 1))  # -1 to not count background
+        #     for j, box in enumerate(gt):
+        #         coords = box[1:]  # [xcenter, ycenter, width, height]
+        #         # the code expects [xmin, ymin, xmax, ymax]
+        #         coords[0] = box[1] - box[3] / 2
+        #         coords[1] = box[2] - box[4] / 2
+        #         coords[2] = box[1] + box[3] / 2
+        #         coords[3] = box[2] + box[4] / 2
+        #         boxes[j, 0:4] = coords
+        #         one_hot = np.zeros(self.num_classes - 1)  # -1 to not count background
+        #         one_hot[int(box[0])] = 1.
+        #         boxes[j, 4:] = one_hot
+        #     y = self.assign_boxes(boxes)
+        #     targets.append(y)
+        #
+        # return np.array(targets)

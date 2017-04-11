@@ -13,7 +13,7 @@ from keras.applications.imagenet_utils import preprocess_input
 from keras.preprocessing import image
 
 from models.yolo import build_yolo
-from models.ssd300 import build_ssd300
+from models.ssd import build_ssd
 from tools.yolo_utils import *
 from tools.ssd_utils import BBoxUtility
 import matplotlib.pyplot as plt
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     elif model_name == 'ssd':
         input_shape_ssd = np.roll(input_shape, -1)
-        model = build_ssd300(input_shape_ssd.tolist(), num_classes, 0,
+        model = build_ssd(input_shape_ssd.tolist(), num_classes, 0,
                              load_pretrained=False,
                              freeze_layers_from='base_model')
     elif model_name == 'yolo':

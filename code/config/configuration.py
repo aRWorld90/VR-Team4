@@ -8,7 +8,7 @@ import shutil
 class Configuration():
     def __init__(self, config_path, exp_name,
                        dataset_path, shared_dataset_path,
-                       experiments_path, shared_experiments_path):
+                       experiments_path, shared_experiments_path, usr_path):
 
         self.config_path = config_path
         self.exp_name = exp_name
@@ -16,6 +16,7 @@ class Configuration():
         self.shared_dataset_path = shared_dataset_path
         self.experiments_path = experiments_path
         self.shared_experiments_path = shared_experiments_path
+        self.usr_path = usr_path
 
     def load(self):
         config_path = self.config_path
@@ -26,7 +27,7 @@ class Configuration():
         shared_experiments_path = self.shared_experiments_path
 
         # Load configuration file
-        print config_path
+        # print (config_path)
         cf = imp.load_source('config', config_path)
 
         # Save extra parameter
@@ -35,11 +36,13 @@ class Configuration():
 
         # Create output folders
         cf.savepath = os.path.join(experiments_path, cf.dataset_name, cf.exp_name)
-        cf.final_savepath = os.path.join(shared_experiments_path, cf.dataset_name,
-                                         cf.exp_name)
+        cf.final_savepath = os.path.join(shared_experiments_path, cf.dataset_name, cf.exp_name)
         cf.log_file = os.path.join(cf.savepath, "logfile.log")
+
         if not os.path.exists(cf.savepath):
             os.makedirs(cf.savepath)
+
+        cf.usr_path = self.usr_path
 
         # Copy config file
         shutil.copyfile(config_path, os.path.join(cf.savepath, "config.py"))
@@ -99,12 +102,19 @@ class Configuration():
             cf.valid_metrics = ['val_loss', 'val_acc', 'val_jaccard']
             cf.best_metric = 'val_jaccard'
             cf.best_type = 'max'
+
         elif cf.dataset.class_mode == 'detection':
-            # TODO detection : different nets may have other metrics
-            cf.train_metrics = ['loss', 'avg_recall', 'avg_iou']
-            cf.valid_metrics = ['val_loss', 'val_avg_recall', 'val_avg_iou']
-            cf.best_metric = 'val_avg_recall'
-            cf.best_type = 'max'
+            if 'yolo' in cf.model_name:
+              cf.train_metrics = ['loss', 'avg_recall', 'avg_iou']
+              cf.valid_metrics = ['val_loss', 'val_avg_recall', 'val_avg_iou']
+              cf.best_metric = 'val_avg_recall'
+              cf.best_type = 'max'
+            elif cf.model_name == 'ssd':
+              cf.train_metrics = ['loss']
+              cf.valid_metrics = ['val_loss']
+              cf.best_metric = 'val_loss'
+              cf.best_type = 'min'
+
         else:
             cf.train_metrics = ['loss', 'acc']
             cf.valid_metrics = ['val_loss', 'val_acc']
@@ -127,7 +137,7 @@ class Configuration():
 
         # Load dataset config file
         dataset_config_path = os.path.join(dataset_path, 'config.py')
-        print 'dataset_config_path', dataset_config_path
+        # print ('dataset_config_path', dataset_config_path)
         dataset_conf = imp.load_source(name, dataset_config_path)
         dataset_conf.config_path = dataset_config_path
 
